@@ -18,6 +18,12 @@
 These functions often receive an image, perform some visualization on the image.
 The functions do not return a value, instead they modify the image itself.
 
+Modified to work with Mobilenet-V1 SSD by Matthew Dunlop, August 2019
+Matthew Dunlop, August 2018
+https://github.com/mdunlop2
+
+Contact:
+https://www.linkedin.com/in/mdunlop2/
 """
 import collections
 import numpy as np

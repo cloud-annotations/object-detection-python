@@ -30,12 +30,21 @@ import glob
 from examples.tflite_interpreter.basic.utils import visualization_utils as vis_util
 
 def json_to_numpy(path):
+    '''
+    Opens anchors.json and labels.json
+    Returns numpy array.
+    '''
     with open(path) as f:
         data = json.load(f)
     return np.asarray(data)
 
 
 def load_image_into_numpy_array(image, reg = False):
+    '''
+    Takes PIL image (only supports batch size of 1 currently)
+    Optionally regularises to [0,1]
+    Returns (1,im_height, im_width, 3) numpy array
+    '''
     (im_width, im_height) = image.size
     if reg:
         return np.array(image.getdata()).reshape(
@@ -45,6 +54,8 @@ def load_image_into_numpy_array(image, reg = False):
             (1,im_height, im_width, 3)).astype(np.float32)
 
 def initiate_tflite_model(MODEL_PATH):
+    # initiates the tflite model interpreter and allocates
+    # tensors. To be performed before inference.
     interpreter = tf.lite.Interpreter(MODEL_PATH)
     interpreter.allocate_tensors()
     return interpreter

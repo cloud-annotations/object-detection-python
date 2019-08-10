@@ -28,8 +28,6 @@ PATH_TO_TEST_IMAGES_DIR = EXAMPLE_DIR + "model/test_images"
 PATH_TO_OUTPUT_DIR = EXAMPLE_DIR + "model/output"
 
 TEST_IMAGE_PATHS = glob.glob(os.path.join(PATH_TO_TEST_IMAGES_DIR, '*.jpg'))
-
-
 MODEL_PATH = MODEL_DIR + "model.tflite"
 MODEL_ANCHOR_PATH = MODEL_DIR + "anchors.json"
 MODEL_LABEL_PATH = MODEL_DIR + "labels.json"
