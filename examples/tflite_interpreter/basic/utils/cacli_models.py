@@ -28,7 +28,7 @@ import glob
 # Utility Packages
 from examples.tflite_interpreter.basic.utils import visualization_utils as vis_util
 
-def load_anchors(path):
+def json_to_numpy(path):
     with open(path) as f:
         data = json.load(f)
     return np.asarray(data)
@@ -123,17 +123,12 @@ def detect_objects(model, image_path, CATEGORY_INDEX, anchor_points, MINIMUM_CON
     xMax = xCtr + w / float(2)
     
     boxes_normalised = [yMin, xMin, yMax, xMax]
-    # boxes_normalised = [xMin, xMax - xMin, yMin, yMax - yMin]
     print("Highest Score: {}".format(np.max(scores) ) )
     print("Highest Scoring Box: {}".format(np.transpose(np.squeeze(boxes_normalised))[np.argmax(scores)]) )
-
-    print("image shape: {}".format(np.squeeze(image_np).shape))
-
-    print("boxes shape: {}".format(np.transpose(np.squeeze(boxes_normalised)).shape))
-
-    print("classes shape: {}".format(np.round(np.squeeze(classes)).astype(np.int32).shape ))
-
-    print("scores shape: {}".format(np.squeeze(scores).shape))
+    print("Image shape: {}".format(np.squeeze(image_np).shape))
+    print("Boxes shape: {}".format(np.transpose(np.squeeze(boxes_normalised)).shape))
+    print("Classes shape: {}".format(np.round(np.squeeze(classes)).astype(np.int32).shape ))
+    print("Scores shape: {}".format(np.squeeze(scores).shape))
     fig = plt.figure()
     out_image = vis_util.visualize_boxes_and_labels_on_image_array(
         np.squeeze(image_np),
