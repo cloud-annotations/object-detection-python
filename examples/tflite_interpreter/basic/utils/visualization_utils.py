@@ -163,8 +163,7 @@ def visualize_boxes_and_labels_on_image_array(image,
 
   This function groups boxes that correspond to the same location
   and creates a display string for each detection and overlays these
-  on the image.  Note that this function modifies the image array in-place
-  and does not return anything.
+  on the image. Returns numpy array of image.
 
   Args:
     image: uint8 numpy array with shape (img_height, img_width, 3)
@@ -185,49 +184,6 @@ def visualize_boxes_and_labels_on_image_array(image,
       classes.
     line_thickness: integer (default: 4) controlling line width of the boxes.
   """
-  # Create a display string (and color) for every box location, group any boxes
-  # that correspond to the same location.
-  # box_to_display_str_map = collections.defaultdict(list)
-  # box_to_color_map = collections.defaultdict(str)
-  # box_to_instance_masks_map = {}
-  # box_to_keypoints_map = collections.defaultdict(list)
-  # if not max_boxes_to_draw:
-  #   max_boxes_to_draw = boxes.shape[0]
-  # for i in range(min(max_boxes_to_draw, boxes.shape[0])):
-  #   if scores[i] > min_score_thresh:
-  #     box = tuple(boxes[i].tolist())
-  #     if classes[i] in category_index.keys():
-  #       class_name = category_index[classes[i]]['name']
-  #     else:
-  #       class_name = 'N/A'
-  #     display_str = '{}: {}%'.format(
-  #         class_name,
-  #         int(100*scores[i]))
-  #     box_to_display_str_map[box].append(display_str)
-  #     if agnostic_mode:
-  #       box_to_color_map[box] = 'DarkOrange'
-  #     else:
-  #       box_to_color_map[box] = STANDARD_COLORS[
-  #           classes[i] % len(STANDARD_COLORS)]
-  
-  # # Draw all boxes onto image.
-  # for box, color in box_to_color_map.items():
-  #   ymin, xmin, ymax, xmax = box
-  #   print(box_to_display_str_map[box])
-  #   draw_bounding_box_on_image_array(
-  #       image,
-  #       ymin,
-  #       xmin,
-  #       ymax,
-  #       xmax,
-  #       color=color,
-  #       thickness=line_thickness,
-  #       display_str_list=box_to_display_str_map[box],
-  #       use_normalized_coordinates=use_normalized_coordinates)
-  # if ret:
-  #   # test function to return PIL image once has been modified
-  #   return image
-  
   box_to_display_str_map = collections.defaultdict(list)
   box_to_color_map = collections.defaultdict(str)
   box_to_instance_masks_map = {}

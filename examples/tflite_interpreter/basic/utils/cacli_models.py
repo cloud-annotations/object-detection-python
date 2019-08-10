@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import json
 import math as m
+import time as t
 
 import os
 import PIL
@@ -50,13 +51,37 @@ def initiate_tflite_model(MODEL_PATH):
 
 def call_tflite_model(interpreter, input_img):
     '''
-    Designed to work with Mobilenet V1 300 models trained on Cacli
+    Designed to work with Mobilenet-V1 SSD 300 models trained on Cacli
+
+    Returns inference classes, boxes, scores
     
-    INPUT:
+    Args:
+    interpreter : (tf.lite.Interpreter) applied to MODEL_PATH
+                  Should have run model.allocate_tensors() previously.
+                  See initiate_tflite_model.
+                  ~~TODO~~
+                  Could possibly offload get_input_details to intiate_tflite_model
+
+    input_img   : (PIL image) PIL image
+
+    Returns:
+    classes     : array(N,) Raw output classes from the mobilenet-v1 SSD model
+                Consists of floats, need to perform rounding.
+                ~~TODO~~
+                Check if this is in fact quantised, what transform needs to be performed?
+
+    boxes       : array(N, 4) Raw box co ordinate output from quantised mobilenet-v1 SSD model.
+                Is quantised, so consists of floats.
+
+    scores      : array(N,) Raw inference score output from quantised mobilenet-v1 SSD model.
+                Consists of floats, need to perform rounding.
+                ~~TODO~~
+                Check if this is in fact quantised, what transform needs to be performed?
 
     '''
     img_column, img_row = 300, 300
     input_img = input_img.resize((img_row, img_column))
+    # Convert to regularised numpy (values in [0,1])
     x_matrix = load_image_into_numpy_array(input_img, reg = True)
     # get interpreter details
     input_details = interpreter.get_input_details()
@@ -72,44 +97,52 @@ def call_tflite_model(interpreter, input_img):
 
 
 
-def detect_objects(model, image_path, CATEGORY_INDEX, anchor_points, MINIMUM_CONFIDENCE, save_dir = None):
+def detect_objects(model, IMAGE_PATH, CATEGORY_INDEX, ANCHOR_POINTS, MINIMUM_CONFIDENCE, SAVE_DIR = None):
     '''
-    Adapted from tensorflow slim
+    Adapted from tensorflow slim.
+    Performs object detection inference on given image (.jpg in IMAGE_PATH)
+    with a tflite Mobilenet-V1 model which has already been allocated tensors
 
     Args:
-    image: uint8 numpy array with shape (img_height, img_width, 3)
-    boxes: a numpy array of shape [N, 4]
-    classes: a numpy array of shape [N]
-    scores: a numpy array of shape [N] or None.  If scores=None, then
-      this function assumes that the boxes to be plotted are groundtruth
-      boxes and plot all boxes as black with no classes or scores.
-    category_index: a dict containing category dictionaries (each holding
-      category index `id` and category name `name`) keyed by category indices.
-    use_normalized_coordinates: whether boxes is to be interpreted as
-      normalized coordinates or not.
-    max_boxes_to_draw: maximum number of boxes to visualize.  If None, draw
-      all boxes.
-    min_score_thresh: minimum score threshold for a box to be visualized
-    line_thickness: integer (default: 4) controlling line width of the boxes.
+    model              : (tf.lite.Interpreter) applied to MODEL_PATH
+                        Should have run model.allocate_tensors() previously.
+                        See initiate_tflite_model
+
+    IMAGE_PATH         : (String) Path to image (.jpg) on which to perform inference
+
+    CATEGORY_INDEX     : (Dictionary) Dictionary of dictionaries, key: position in labels.json
+                        Each sub-dictionary has "name" field which will be displayed
+                        beside the bounding box
+
+    ANCHOR_POINTS      : array(N, 4) Shaped numpy array representing each of the
+                        anchor points provided for Mobilenet-v1 SSD in anchors.json
+
+    MINIMUM_CONFIDENCE : (Float) Minimum score permissible for box to be considered for
+                        display. Mobilenet-V1 SSD tends to provide quite low probabilities.
+
+    SAVE_DIR           : (String) (Optional) Directory to save output inference images to.
+                        If None, will print the plot to CLI with Matplotlib
     '''
 
 
-    image = Image.open(image_path)
-    #
+    image = Image.open(IMAGE_PATH)
+    start = t.time()
     classes, boxes, scores = call_tflite_model(model, image)
+    print("Inference time: {}".format(t.time()-start))
     image_np = load_image_into_numpy_array(image)
     image_np_reg = load_image_into_numpy_array(image, reg=True)
     image_np_expanded = np.expand_dims(image_np, axis=0)
-    # Convert the quantised boxes to normaised
+
+    # Convert the quantised boxes to normalised
     ty = boxes[:,0] / float(10)
     tx = boxes[:,1] / float(10)
     th = boxes[:,2] / float(5)
     tw = boxes[:,3] / float(5)
 
-    yACtr = anchor_points[:,0]
-    xACtr = anchor_points[:,1]
-    ha    = anchor_points[:,2]
-    wa    = anchor_points[:,3]
+    yACtr = ANCHOR_POINTS[:,0]
+    xACtr = ANCHOR_POINTS[:,1]
+    ha    = ANCHOR_POINTS[:,2]
+    wa    = ANCHOR_POINTS[:,3]
 
     w = np.exp(tw) * wa
     h = np.exp(th) * ha
@@ -123,8 +156,11 @@ def detect_objects(model, image_path, CATEGORY_INDEX, anchor_points, MINIMUM_CON
     xMax = xCtr + w / float(2)
     
     boxes_normalised = [yMin, xMin, yMax, xMax]
+    print("-"*10)
+    print("Inference Summary:")
     print("Highest Score: {}".format(np.max(scores) ) )
     print("Highest Scoring Box: {}".format(np.transpose(np.squeeze(boxes_normalised))[np.argmax(scores)]) )
+    print("-"*10)
     print("Image shape: {}".format(np.squeeze(image_np).shape))
     print("Boxes shape: {}".format(np.transpose(np.squeeze(boxes_normalised)).shape))
     print("Classes shape: {}".format(np.round(np.squeeze(classes)).astype(np.int32).shape ))
@@ -147,12 +183,13 @@ def detect_objects(model, image_path, CATEGORY_INDEX, anchor_points, MINIMUM_CON
     fig.add_axes(ax)
 
     plt.imshow(out_image/255)
-    if save_dir:
-      output_dir = str(save_dir+'/{}'.format(image_path))
+    if SAVE_DIR:
+      output_dir = str(SAVE_DIR+'/{}'.format(IMAGE_PATH))
       mkdir_p(Path(output_dir).parent)
       plt.savefig(output_dir, dpi = 62)
       plt.close(fig)
       print("Image Saved")
+      print("="*10)
 
 def mkdir_p(mypath):
   '''Creates a directory. equivalent to using mkdir -p on the command line'''

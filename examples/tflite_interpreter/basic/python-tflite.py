@@ -38,15 +38,18 @@ MODEL_LABEL_PATH = MODEL_DIR + "labels.json"
 model_interpreter = models.initiate_tflite_model(MODEL_PATH)
 # Load mobilenet-v1 anchor points
 anchor_points = models.json_to_numpy(MODEL_ANCHOR_PATH)
+
 # Load Category Index
 label_list = models.json_to_numpy(MODEL_LABEL_PATH)
 
-CATEGORY_INDEX = { i : {"name" : label_list[i]} for i in list(range(len(label_list))) }
-
+category_index = { i : {"name" : label_list[i]} for i in list(range(len(label_list))) }
+count= 0
 for image_path in TEST_IMAGE_PATHS:
+  count += 1
+  print("\nImage {} of {}.".format(count,len(TEST_IMAGE_PATHS)+1))
   models.detect_objects(model_interpreter,
                         image_path,
-                        CATEGORY_INDEX,
+                        category_index,
                         anchor_points,
                         MINIMUM_CONFIDENCE,
-                        save_dir=PATH_TO_OUTPUT_DIR)
+                        SAVE_DIR=PATH_TO_OUTPUT_DIR)
