@@ -1,0 +1,5 @@
+tensorflow==1.13.2
+pandas
+numpy
+pillow
+matplotlib
