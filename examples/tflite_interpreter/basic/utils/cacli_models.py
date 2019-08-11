@@ -27,7 +27,8 @@ import matplotlib.pyplot as plt
 import glob
 
 # Utility Packages
-from examples.tflite_interpreter.basic.utils import visualization_utils as vis_util
+# from examples.tflite_interpreter.basic.utils import visualization_utils as vis_util
+from utils import visualization_utils as vis_util
 
 def json_to_numpy(path):
     '''
