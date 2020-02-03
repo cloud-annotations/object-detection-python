@@ -10,7 +10,6 @@ https://github.com/cloud-annotations/training
 '''
 import tensorflow as tf
 import numpy as np
-import pandas as pd
 import json
 import math as m
 import time as t
